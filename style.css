@@ -420,7 +420,6 @@ header {
 
 .small-story::after {
 
-    content: "new experiments,\A completely unnecessary projects,\A and weird ideas.";
 
     white-space: pre-line;
 
