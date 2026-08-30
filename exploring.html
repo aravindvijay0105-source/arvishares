@@ -1,1 +1,519 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kollywood Guess | ArviShares</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    background: #171717;
+    color: #f5e6c8;
+
+    font-family: "Comic Sans MS", cursive;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+}
+
+.game {
+    width: 100%;
+    max-width: 800px;
+
+    background: #242424;
+
+    border: 3px solid #f5e6c8;
+
+    padding: 40px 30px;
+
+    text-align: center;
+
+    box-shadow: 10px 10px 0 #f5e6c8;
+}
+
+h1 {
+    font-size: 42px;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 18px;
+    margin-top: 8px;
+    margin-bottom: 30px;
+}
+
+.score {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.question-number {
+    font-size: 15px;
+    opacity: 0.8;
+}
+
+.question {
+    font-size: 27px;
+    margin: 30px 0;
+}
+
+.answers {
+    display: grid;
+    gap: 14px;
+}
+
+.answer {
+    width: 100%;
+
+    padding: 16px;
+
+    background: #f5e6c8;
+    color: #171717;
+
+    border: 2px solid #f5e6c8;
+
+    font-family: inherit;
+    font-size: 18px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.answer:hover {
+    transform: translateY(-3px);
+}
+
+.answer:disabled {
+    cursor: default;
+}
+
+#feedback {
+    min-height: 35px;
+
+    margin: 25px 0;
+
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.next,
+.restart {
+
+    display: none;
+
+    padding: 14px 30px;
+
+    background: #f5e6c8;
+    color: #171717;
+
+    border: none;
+
+    font-family: inherit;
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+.next:hover,
+.restart:hover {
+    transform: scale(1.05);
+}
+
+#finalScore {
+    font-size: 35px;
+    margin: 25px 0;
+}
+
+.back {
+    display: block;
+
+    margin-top: 35px;
+
+    color: #f5e6c8;
+
+    text-decoration: none;
+}
+
+.back:hover {
+    text-decoration: underline;
+}
+
+@media(max-width:600px) {
+
+    .game {
+        padding: 30px 18px;
+    }
+
+    h1 {
+        font-size: 32px;
+    }
+
+    .question {
+        font-size: 21px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="game">
+
+    <h1>🎬 KOLLYWOOD GUESS</h1>
+
+    <div class="subtitle">
+        HOW WELL DO YOU KNOW TAMIL CINEMA?
+    </div>
+
+
+    <div id="gameArea">
+
+        <div class="score">
+            🏆 SCORE: <span id="score">0</span>
+        </div>
+
+        <div class="question-number" id="questionNumber"></div>
+
+        <div class="question" id="question">
+            Loading...
+        </div>
+
+        <div class="answers" id="answers"></div>
+
+        <div id="feedback"></div>
+
+        <button class="next" id="nextButton" onclick="nextQuestion()">
+            NEXT →
+        </button>
+
+    </div>
+
+
+    <div id="endArea" style="display:none;">
+
+        <h2>🎞️ MOVIE QUIZ COMPLETE!</h2>
+
+        <div id="finalScore"></div>
+
+        <p id="message"></p>
+
+        <button class="restart"
+                id="restartButton"
+                onclick="restartGame()">
+
+            🔄 PLAY AGAIN
+
+        </button>
+
+    </div>
+
+
+    <a href="index.html" class="back">
+        ← BACK TO ARVISHARES
+    </a>
+
+</div>
+
+
+<script>
+
+
+const questions = [
+
+    {
+        question: "Which movie features the character 'Velu Nayakan'?",
+
+        answers: [
+            "Nayakan",
+            "Anjali",
+            "Roja",
+            "Indian"
+        ],
+
+        correct: 0
+    },
+
+
+    {
+        question: "In which movie does the character 'Parthiban' appear?",
+
+        answers: [
+            "Leo",
+            "Vikram",
+            "Kaithi",
+            "Master"
+        ],
+
+        correct: 0
+    },
+
+
+    {
+        question: "Which movie is famous for the dialogue 'Naan oru thadava sonna...'?",
+
+        answers: [
+            "Baasha",
+            "Padayappa",
+            "Sivaji",
+            "Muthu"
+        ],
+
+        correct: 0
+    },
+
+
+    {
+        question: "Which movie features the character 'Mankatha Vinayak'?",
+
+        answers: [
+            "Billa",
+            "Mankatha",
+            "Vedalam",
+            "Aarambam"
+        ],
+
+        correct: 1
+    },
+
+
+    {
+        question: "Which movie features the character 'Rocky'?",
+
+        answers: [
+            "Jailer",
+            "Vikram",
+            "KGF",
+            "Kaithi"
+        ],
+
+        correct: 2
+    }
+
+];
+
+
+let currentQuestion = 0;
+
+let score = 0;
+
+
+function loadQuestion() {
+
+    const q = questions[currentQuestion];
+
+
+    document.getElementById("questionNumber").innerText =
+        "QUESTION " +
+        (currentQuestion + 1) +
+        " / " +
+        questions.length;
+
+
+    document.getElementById("question").innerText =
+        q.question;
+
+
+    document.getElementById("feedback").innerText = "";
+
+
+    document.getElementById("nextButton").style.display =
+        "none";
+
+
+    const answersDiv =
+        document.getElementById("answers");
+
+
+    answersDiv.innerHTML = "";
+
+
+    q.answers.forEach((answer, index) => {
+
+        const button =
+            document.createElement("button");
+
+
+        button.className = "answer";
+
+
+        button.innerText =
+            answer;
+
+
+        button.onclick = function() {
+
+            checkAnswer(index);
+
+        };
+
+
+        answersDiv.appendChild(button);
+
+    });
+
+}
+
+
+function checkAnswer(selected) {
+
+    const q = questions[currentQuestion];
+
+
+    const buttons =
+        document.querySelectorAll(".answer");
+
+
+    buttons.forEach(button => {
+
+        button.disabled = true;
+
+    });
+
+
+    if (selected === q.correct) {
+
+        score++;
+
+
+        document.getElementById("score").innerText =
+            score;
+
+
+        document.getElementById("feedback").innerText =
+            "🔥 MASS! Correct answer!";
+
+    }
+
+    else {
+
+        document.getElementById("feedback").innerText =
+            "❌ Wrong! Correct answer: " +
+            q.answers[q.correct];
+
+    }
+
+
+    if (currentQuestion < questions.length - 1) {
+
+        document.getElementById("nextButton").style.display =
+            "inline-block";
+
+    }
+
+    else {
+
+        setTimeout(showResult, 800);
+
+    }
+
+}
+
+
+function nextQuestion() {
+
+    currentQuestion++;
+
+    loadQuestion();
+
+}
+
+
+function showResult() {
+
+    document.getElementById("gameArea").style.display =
+        "none";
+
+
+    document.getElementById("endArea").style.display =
+        "block";
+
+
+    document.getElementById("finalScore").innerText =
+        "🏆 " +
+        score +
+        " / " +
+        questions.length;
+
+
+    let message;
+
+
+    if (score === 5) {
+
+        message =
+            "🔥 MASS HERO! You are a true Kollywood fan!";
+
+    }
+
+    else if (score >= 3) {
+
+        message =
+            "🎬 SUPER! You know your Kollywood pretty well!";
+
+    }
+
+    else {
+
+        message =
+            "😎 Keep watching Tamil cinema and try again!";
+
+    }
+
+
+    document.getElementById("message").innerText =
+        message;
+
+
+    document.getElementById("restartButton").style.display =
+        "inline-block";
+
+}
+
+
+function restartGame() {
+
+    currentQuestion = 0;
+
+    score = 0;
+
+
+    document.getElementById("score").innerText =
+        "0";
+
+
+    document.getElementById("gameArea").style.display =
+        "block";
+
+
+    document.getElementById("endArea").style.display =
+        "none";
+
+
+    loadQuestion();
+
+}
+
+
+loadQuestion();
+
+</script>
+
+</body>
+</html>
